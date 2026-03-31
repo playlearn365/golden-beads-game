@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>金色串珠 Golden Beads</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
+body {
+  background: #FFF5E6;
+  font-family: "Comic Sans MS", "Chalkboard SE", cursive;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 彩色泡泡背景裝飾 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(255,200,100,0.15) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(255,150,150,0.12) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(150,220,255,0.1) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 12px 30px; }
+
+/* HEADER */
+.hdr {
+  background: linear-gradient(135deg, #FF8C42, #FFB347);
+  border-radius: 0 0 30px 30px;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 6px 20px rgba(255,140,66,0.35);
+  margin-bottom: 16px;
+}
+.htitle {
+  color: white;
+  font-size: 1.4rem;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+  letter-spacing: 1px;
+}
+.sbox {
+  background: white;
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #FF8C42;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+/* TABS */
+.tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; justify-content: center; }
+.tab {
+  background: white;
+  border: 3px solid #FFB347;
+  border-radius: 20px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: 0.88rem;
+  color: #FF8C42;
+  transition: all 0.2s;
+  box-shadow: 0 3px 0 #FFB347;
+}
+.tab:active { transform: translateY(2px); box-shadow: 0 1px 0 #FFB347; }
+.tab.on { background: #FF8C42; color: white; border-color: #FF8C42; box-shadow: 0 3px 0 #cc6a20; }
+
+/* PROGRESS */
+.pgarea { margin-bottom: 12px; }
+.pgwrap { background: #FFE0B2; border-radius: 20px; height: 14px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+.pgbar { height: 14px; background: linear-gradient(90deg, #FF8C42, #FFD166); border-radius: 20px; width: 0%; transition: width 0.5s; }
+.pglbl { text-align: center; color: #FF8C42; font-size: 0.82rem; margin-top: 5px; font-weight: bold; }
+
+/* QUESTION CARD */
+.qcard {
+  background: white;
+  border-radius: 24px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  border: 3px solid #FFE0B2;
+  margin-bottom: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.qcard::before {
+  content: "";
+  position: absolute;
+  top: -20px; right: -20px;
+  width: 80px; height: 80px;
+  background: rgba(255,209,102,0.2);
+  border-radius: 50%;
+}
+.qlbl { color: #FF8C42; font-size: 1rem; margin-bottom: 6px; }
+.qnum { font-size: 5rem; font-weight: bold; color: #FF6B35; line-height: 1; text-shadow: 3px 3px 0 rgba(255,107,53,0.15); }
+.drow { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+.dbadge {
+  background: #FFF3E0;
+  border: 2px solid #FFB347;
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 0.85rem;
+  color: #FF8C42;
+  font-weight: bold;
+}
+
+/* FEEDBACK */
+.fb {
+  border-radius: 16px;
+  font-weight: bold;
+  font-size: 1rem;
+  text-align: center;
+  padding: 10px 18px;
+  margin-bottom: 12px;
+  display: none;
+}
+.fb.ok { background: #E8F5E9; border: 2px solid #66BB6A; color: #2E7D32; display: block; }
+.fb.err { background: #FFF3E0; border: 2px solid #FFA726; color: #E65100; display: block; }
+
+/* WORKSPACE */
+.ws {
+  background: white;
+  border-radius: 24px;
+  padding: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+  border: 3px solid #FFE0B2;
+}
+.wst { text-align: center; color: #FF8C42; font-size: 0.9rem; margin-bottom: 14px; }
+
+/* TWO-ZONE LAYOUT */
+.zones { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+
+/* BEAD BANK - source */
+.bank {
+  background: #FFF8F0;
+  border: 3px dashed #FFB347;
+  border-radius: 20px;
+  padding: 12px;
+  flex: 1;
+  min-width: 140px;
+}
+.bank.drag-over {
+  background: #FFF3CD;
+  border-color: #FF8C42;
+  border-style: solid;
+}
+  text-align: center;
+  font-size: 0.82rem;
+  color: #FF8C42;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+.bank-items { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.bank-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.bank-label {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #888;
+}
+
+/* PLACE VALUE COLUMNS - target */
+.pcols { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; flex: 2; }
+.pcol {
+  background: #FFFDE7;
+  border: 3px solid #FFE082;
+  border-radius: 18px;
+  padding: 10px 8px;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 160px;
+  position: relative;
+}
+.pcol.drag-over { background: #FFF9C4; border-color: #FF8C42; }
+.pclbl {
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.4;
+}
+.cTH .pclbl { background: #E3F2FD; color: #1565C0; border: 2px solid #90CAF9; }
+.cHU .pclbl { background: #E8F5E9; color: #2E7D32; border: 2px solid #A5D6A7; }
+.cTE .pclbl { background: #FFF3E0; color: #E65100; border: 2px solid #FFCC80; }
+.cUN .pclbl { background: #F3E5F5; color: #6A1B9A; border: 2px solid #CE93D8; }
+.pdisp {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: center;
+  min-height: 30px;
+  width: 100%;
+  padding: 4px;
+}
+.pcnt {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #FF8C42;
+}
+.drop-hint {
+  font-size: 0.72rem;
+  color: #ccc;
+  text-align: center;
+  position: absolute;
+  bottom: 8px;
+  left: 0; right: 0;
+}
+
+/* BEADS */
+.bead {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #FFEE88, #FFBF00 55%, #E65100);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25), inset 0 1px 3px rgba(255,255,255,0.5);
+  flex-shrink: 0;
+  display: inline-block;
+  cursor: grab;
+  transition: transform 0.1s, box-shadow 0.1s;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+.bead:active { cursor: grabbing; }
+.bead.dragging { opacity: 0.4; }
+
+/* bead structures */
+.bbar { display: flex; flex-direction: column; gap: 2px; align-items: center; cursor: grab; }
+.bsq  { display: grid; grid-template-columns: repeat(10, 22px); gap: 2px; cursor: grab; }
+.bcube { display: flex; flex-direction: column; gap: 1px; cursor: grab; }
+.bcube .bead { width: 9px; height: 9px; }
+.bcube .bsq  { grid-template-columns: repeat(10, 9px); gap: 1px; }
+
+/* draggable group */
+.drag-group {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.85;
+  transform: scale(1.1);
+  transition: none;
+}
+
+/* bank source items */
+.src-bead, .src-bar, .src-sq, .src-cube {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ACTION BUTTONS */
+.arow { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+.abtn {
+  padding: 12px 24px;
+  border-radius: 20px;
+  border: none;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+  transition: all 0.15s;
+}
+.abtn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.15); }
+.achk { background: linear-gradient(135deg, #FF8C42, #FFB347); color: white; }
+.anxt { background: linear-gradient(135deg, #66BB6A, #43A047); color: white; }
+.arst { background: #ECEFF1; color: #607D8B; }
+
+/* CELEBRATION */
+.cel {
+  background: linear-gradient(135deg, #FF8C42, #FFD166);
+  border-radius: 24px;
+  padding: 28px;
+  text-align: center;
+  margin-top: 14px;
+  display: none;
+  box-shadow: 0 8px 30px rgba(255,140,66,0.4);
+}
+.cel.show { display: block; }
+.celt { font-size: 2rem; font-weight: bold; color: white; text-shadow: 2px 2px 0 rgba(0,0,0,0.1); margin-bottom: 8px; }
+.cels { color: #FFF3E0; font-size: 1rem; margin-bottom: 16px; }
+.celb {
+  padding: 12px 32px;
+  background: white;
+  color: #FF8C42;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+}
+
+/* star burst animation */
+@keyframes pop { 0%{transform:scale(0.5);opacity:0} 60%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }
+.popped { animation: pop 0.3s ease-out; }
+
+/* confetti */
+.conf { position: fixed; width: 10px; height: 10px; border-radius: 3px; pointer-events: none; z-index: 9998; animation: cfall 2.2s ease-in forwards; }
+@keyframes cfall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(105vh) rotate(720deg);opacity:0} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div class="htitle">&#127995; 金色串珠遊戲</div>
+    <div class="sbox">&#11088; <span id="sc">0</span> 分</div>
+  </div>
+
+  <div class="tabs" id="tabsDiv">
+    <div class="tab on" data-lv="1">&#127462; 個位 (1-9)</div>
+    <div class="tab" data-lv="2">&#127463; 十位 (10-99)</div>
+    <div class="tab" data-lv="3">&#127464; 百位 (100-999)</div>
+    <div class="tab" data-lv="4">&#127465; 千位 (1000+)</div>
+  </div>
+
+  <div class="pgarea">
+    <div class="pgwrap"><div class="pgbar" id="pgbar"></div></div>
+    <div class="pglbl" id="pglbl">題目 1 / 9</div>
+  </div>
+
+  <div class="qcard">
+    <div class="qlbl">&#128072; 請把珠子拖到下面的格子裡，擺出這個數字！</div>
+    <div class="qnum" id="qnum">-</div>
+    <div class="drow" id="drow"></div>
+  </div>
+
+  <div class="fb" id="fb"></div>
+
+  <div class="ws">
+    <div class="wst">&#128588; 把左邊的珠子拖到右邊對應的位置！</div>
+    <div class="zones">
+      <!-- BEAD BANK -->
+      <div class="bank" id="bankZone">
+        <div class="bank-title">&#128230; 珠子庫（拖回這裡放回）</div>
+        <div class="bank-items" id="bankItems"></div>
+      </div>
+      <!-- PLACE VALUE COLUMNS -->
+      <div class="pcols" id="pcols"></div>
+    </div>
+    <div class="arow">
+      <button class="abtn arst" id="btnRst">&#128260; 清除</button>
+      <button class="abtn achk" id="btnChk">&#10003; 檢查答案</button>
+      <button class="abtn anxt" id="btnNxt" style="display:none">下一題 &#10148;</button>
+    </div>
+  </div>
+
+  <div class="cel" id="cel">
+    <div class="celt">&#127881; 太棒了！</div>
+    <div class="cels" id="cels"></div>
+    <button class="celb" id="celb">再玩一次 &#128257;</button>
+  </div>
+</div>
+
+<script>
+var lv=1, qs=[], curQ=0, scVal=0, done=false;
+var beads={T:0,H:0,TE:0,U:0};
+
+var LV={
+  1:{min:1,  max:9,   cols:["U"],            total:9},
+  2:{min:10, max:99,  cols:["TE","U"],       total:10},
+  3:{min:100,max:999, cols:["H","TE","U"],   total:10},
+  4:{min:1000,max:9999,cols:["T","H","TE","U"],total:10}
+};
+var CI={
+  T: {lbl:"千位\n1000",cls:"cTH",type:"cube"},
+  H: {lbl:"百位\n100", cls:"cHU",type:"sq"},
+  TE:{lbl:"十位\n10",  cls:"cTE",type:"bar"},
+  U: {lbl:"個位\n1",   cls:"cUN",type:"bead"}
+};
+var CN={T:"千位",H:"百位",TE:"十位",U:"個位"};
+var DN={T:"1000",H:"100",TE:"10",U:"1"};
+
+function dcp(n){return{T:Math.floor(n/1000),H:Math.floor((n%1000)/100),TE:Math.floor((n%100)/10),U:n%10};}
+
+function shuffle(arr){
+  for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=arr[i];arr[i]=arr[j];arr[j]=t;}
+  return arr;
+}
+function makePuzz(){
+  var c=LV[lv],all=[];
+  for(var n=c.min;n<=c.max;n++) all.push(n);
+  shuffle(all);
+  return all.slice(0,c.total);
+}
+
+/* ── Build a bead element ── */
+function mkBead(small){
+  var b=document.createElement("div");
+  b.className="bead";
+  if(small){b.style.width="9px";b.style.height="9px";}
+  return b;
+}
+function mkBar(){
+  var g=document.createElement("div");g.className="bbar";
+  for(var i=0;i<10;i++) g.appendChild(mkBead());
+  return g;
+}
+function mkSq(small){
+  var g=document.createElement("div");g.className="bsq";
+  if(small) g.style.gridTemplateColumns="repeat(10,9px)";
+  for(var i=0;i<100;i++) g.appendChild(mkBead(small));
+  return g;
+}
+function mkCube(){
+  var g=document.createElement("div");g.className="bcube";
+  for(var l=0;l<10;l++) g.appendChild(mkSq(true));
+  return g;
+}
+function mkUnit(type){
+  if(type==="bead") return mkBead();
+  if(type==="bar")  return mkBar();
+  if(type==="sq")   return mkSq(false);
+  if(type==="cube") return mkCube();
+}
+
+/* ── Drag & Drop (mouse + touch) ── */
+// dragFrom: "bank" = 從珠子庫拖出, "col" = 從格子拖回庫
+var ghost=null, ghostK=null, ghostFrom=null, ghostOff={x:0,y:0};
+
+function startDrag(e, k, from){
+  if(done) return;
+  e.preventDefault();
+  ghostK=k; ghostFrom=from||"bank";
+  var touch=e.touches?e.touches[0]:e;
+  var type=CI[k].type;
+  ghost=document.createElement("div");
+  ghost.className="drag-ghost";
+  ghost.appendChild(mkUnit(type));
+  document.body.appendChild(ghost);
+  ghostOff.x=20; ghostOff.y=20;
+  moveGhost(touch.clientX, touch.clientY);
+  document.addEventListener("mousemove", onDragMove);
+  document.addEventListener("mouseup",   onDragEnd);
+  document.addEventListener("touchmove", onDragMove, {passive:false});
+  document.addEventListener("touchend",  onDragEnd);
+  // 從格子拖出時，先扣掉一個
+  if(ghostFrom==="col" && beads[k]>0){
+    beads[k]--;
+    renderCol(k);
+  }
+  // 高亮可放置的欄位
+  var col=document.getElementById("drop-"+k);
+  if(col) col.classList.add("drag-over");
+  // 高亮珠子庫（可放回）
+  var bank=document.getElementById("bankZone");
+  if(bank) bank.classList.add("drag-over");
+}
+
+function moveGhost(cx,cy){
+  if(!ghost) return;
+  ghost.style.left=(cx-ghostOff.x)+"px";
+  ghost.style.top=(cy-ghostOff.y)+"px";
+}
+
+function onDragMove(e){
+  e.preventDefault();
+  var touch=e.touches?e.touches[0]:e;
+  moveGhost(touch.clientX, touch.clientY);
+}
+
+function onDragEnd(e){
+  if(!ghost||!ghostK) return;
+  var touch=e.changedTouches?e.changedTouches[0]:e;
+  var cx=touch.clientX, cy=touch.clientY;
+  var placed=false;
+
+  // 1. 試著放進格子
+  var col=document.getElementById("drop-"+ghostK);
+  if(col){
+    col.classList.remove("drag-over");
+    var r=col.getBoundingClientRect();
+    if(cx>=r.left&&cx<=r.right&&cy>=r.top&&cy<=r.bottom){
+      if(beads[ghostK]<9){
+        beads[ghostK]++;
+        renderCol(ghostK);
+        col.classList.add("popped");
+        setTimeout(function(x){return function(){x.classList.remove("popped");};}(col),300);
+        placed=true;
+      }
+    }
+  }
+
+  // 2. 試著放回珠子庫
+  if(!placed){
+    var bank=document.getElementById("bankZone");
+    if(bank){
+      bank.classList.remove("drag-over");
+      var rb=bank.getBoundingClientRect();
+      if(cx>=rb.left&&cx<=rb.right&&cy>=rb.top&&cy<=rb.bottom){
+        // 放回庫：什麼都不做，珠子從格子拖出時已扣除
+        placed=true;
+        // 小動畫提示
+        bank.classList.add("popped");
+        setTimeout(function(){bank.classList.remove("popped");},300);
+      }
+    }
+  }
+
+  // 3. 如果兩處都沒放成功，且是從格子拖出的，要放回格子
+  if(!placed && ghostFrom==="col"){
+    beads[ghostK]++;
+    renderCol(ghostK);
+  }
+  // 如果是從珠子庫拖出但沒放到格子，就算了（珠子回到庫）
+
+  // 清除 drag-over 樣式
+  var bank2=document.getElementById("bankZone");
+  if(bank2) bank2.classList.remove("drag-over");
+
+  if(ghost.parentNode) ghost.parentNode.removeChild(ghost);
+  ghost=null; ghostK=null; ghostFrom=null;
+  document.removeEventListener("mousemove",onDragMove);
+  document.removeEventListener("mouseup",  onDragEnd);
+  document.removeEventListener("touchmove",onDragMove);
+  document.removeEventListener("touchend", onDragEnd);
+}
+
+/* ── 點擊格子裡的珠子也可以移除 ── */
+function removeOne(k){
+  if(done) return;
+  if(beads[k]>0){beads[k]--;renderCol(k);}
+}
+
+/* ── Build Bank (draggable source items) ── */
+function buildBank(){
+  var bank=document.getElementById("bankItems");
+  bank.innerHTML="";
+  var cols=LV[lv].cols;
+  var labels={U:"1顆珠子",TE:"10條串珠",H:"100片珠板",T:"1000塊珠立方"};
+  for(var i=0;i<cols.length;i++){
+    var k=cols[i], type=CI[k].type;
+    var item=document.createElement("div");
+    item.className="bank-item";
+    var vis=document.createElement("div");
+    vis.className="src-"+type;
+    vis.style.touchAction="none";
+    vis.style.cursor="grab";
+    vis.setAttribute("data-k",k);
+    vis.appendChild(mkUnit(type));
+    // scale down cube for display
+    if(type==="cube") vis.style.transform="scale(0.6)";
+    var lbl=document.createElement("div");
+    lbl.className="bank-label";
+    lbl.textContent=labels[k];
+    item.appendChild(vis);
+    item.appendChild(lbl);
+    bank.appendChild(item);
+
+    // bind drag from bank
+    (function(kk){
+      vis.addEventListener("mousedown", function(e){startDrag(e,kk,"bank");});
+      vis.addEventListener("touchstart",function(e){startDrag(e,kk,"bank");},{passive:false});
+    })(k);
+  }
+}
+
+/* ── Build Place-Value Columns ── */
+function buildCols(){
+  var cols=LV[lv].cols, con=document.getElementById("pcols");
+  con.innerHTML=""; beads={T:0,H:0,TE:0,U:0};
+  for(var i=0;i<cols.length;i++){
+    var k=cols[i], info=CI[k];
+    var d=document.createElement("div");
+    d.className="pcol "+info.cls;
+    d.id="drop-"+k;
+
+    var lb=document.createElement("div");lb.className="pclbl";lb.textContent=info.lbl;d.appendChild(lb);
+    var dp=document.createElement("div");dp.className="pdisp";dp.id="dp-"+k;d.appendChild(dp);
+    var ct=document.createElement("div");ct.className="pcnt";ct.id="ct-"+k;ct.textContent="0";d.appendChild(ct);
+
+    var hint=document.createElement("div");hint.className="drop-hint";hint.textContent="拖到這裡";d.appendChild(hint);
+
+    // tap on column counter to remove one
+    (function(kk){
+      ct.addEventListener("click",function(){removeOne(kk);});
+      ct.style.cursor="pointer";
+      ct.title="點擊移除一個";
+    })(k);
+
+    con.appendChild(d);
+  }
+}
+
+/* ── Render a column's placed beads ── */
+function renderCol(k){
+  var v=beads[k];
+  var ct=document.getElementById("ct-"+k);
+  var dp=document.getElementById("dp-"+k);
+  if(ct) ct.textContent=v;
+  if(!dp) return;
+  dp.innerHTML="";
+  var type=CI[k].type;
+  for(var i=0;i<v;i++){
+    var g=mkUnit(type);
+    g.style.cursor="grab";
+    g.style.touchAction="none";
+    g.title="拖回珠子庫或點擊移除";
+    // 拖回珠子庫
+    (function(kk){
+      g.addEventListener("mousedown",function(e){startDrag(e,kk,"col");});
+      g.addEventListener("touchstart",function(e){startDrag(e,kk,"col");},{passive:false});
+    })(k);
+    dp.appendChild(g);
+  }
+}
+
+function resetB(){
+  beads={T:0,H:0,TE:0,U:0};
+  var cols=LV[lv].cols;
+  for(var i=0;i<cols.length;i++) renderCol(cols[i]);
+}
+
+/* ── Load question ── */
+function loadQ(){
+  done=false;
+  document.getElementById("btnNxt").style.display="none";
+  var fb=document.getElementById("fb");fb.className="fb";fb.textContent="";
+  resetB();
+  var n=qs[curQ];
+  document.getElementById("qnum").textContent=n;
+  var dr=document.getElementById("drow");dr.innerHTML="";
+  if(lv>=2){
+    var p=dcp(n),cols=LV[lv].cols;
+    for(var i=0;i<cols.length;i++){
+      var kk=cols[i];
+      if(p[kk]>0){var b=document.createElement("div");b.className="dbadge";b.textContent=p[kk]+" 個"+DN[kk];dr.appendChild(b);}
+    }
+  }
+  var total=LV[lv].total;
+  document.getElementById("pgbar").style.width=(curQ/total*100)+"%";
+  document.getElementById("pglbl").textContent="題目 "+(curQ+1)+" / "+total;
+}
+
+/* ── Check ── */
+function checkAns(){
+  if(done) return;
+  var n=qs[curQ],p=dcp(n),cols=LV[lv].cols,ok=true;
+  for(var i=0;i<cols.length;i++) if(beads[cols[i]]!==p[cols[i]]){ok=false;break;}
+  done=true;
+  var fb=document.getElementById("fb");
+  if(ok){
+    scVal++;document.getElementById("sc").textContent=scVal;
+    fb.className="fb ok";fb.textContent="&#127881; 答對了！太厲害了！";
+    sprayConf();
+  } else {
+    var pts=[];
+    for(var i=0;i<cols.length;i++) pts.push(CN[cols[i]]+"="+p[cols[i]]);
+    fb.className="fb err";fb.textContent="&#128522; 再試試！正確答案："+pts.join("，");
+  }
+  document.getElementById("btnNxt").style.display="inline-block";
+}
+
+function nextQ(){
+  curQ++;
+  var total=LV[lv].total;
+  if(curQ>=total){
+    document.getElementById("pgbar").style.width="100%";
+    document.getElementById("pglbl").textContent="完成！"+scVal+"/"+total+" 答對";
+    document.getElementById("cels").textContent=(scVal===total)?"全部答對！你真的是小天才！&#127941;":"你答對了 "+scVal+" 題，很棒喔！繼續加油！&#128170;";
+    document.getElementById("cel").className="cel show";
+    sprayConf();
+  } else { loadQ(); }
+}
+
+function init(){
+  qs=makePuzz();curQ=0;scVal=0;
+  document.getElementById("sc").textContent=0;
+  buildBank();
+  buildCols();
+  loadQ();
+}
+function restart(){document.getElementById("cel").className="cel";init();}
+function setLv(l){
+  lv=l;
+  var ts=document.querySelectorAll(".tab");
+  for(var i=0;i<ts.length;i++) ts[i].className=(i===l-1)?"tab on":"tab";
+  restart();
+}
+
+/* confetti */
+function sprayConf(){
+  var cols=["#FF8C42","#FFD166","#06D6A0","#118AB2","#EF476F","#FFB347"];
+  for(var i=0;i<40;i++){
+    (function(){
+      var el=document.createElement("div");el.className="conf";
+      el.style.left=(Math.random()*100)+"vw";el.style.top="-12px";
+      el.style.background=cols[Math.floor(Math.random()*cols.length)];
+      el.style.animationDelay=(Math.random()*1.5)+"s";
+      el.style.animationDuration=(1.5+Math.random())+"s";
+      el.style.borderRadius=Math.random()>0.5?"50%":"3px";
+      document.body.appendChild(el);
+      setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},4000);
+    })();
+  }
+}
+
+/* wire buttons */
+document.getElementById("tabsDiv").addEventListener("click",function(e){
+  var t=e.target;
+  while(t&&t!==this){if(t.getAttribute("data-lv")){setLv(parseInt(t.getAttribute("data-lv")));return;}t=t.parentNode;}
+});
+document.getElementById("btnRst").addEventListener("click",function(){resetB();});
+document.getElementById("btnChk").addEventListener("click",function(){checkAns();});
+document.getElementById("btnNxt").addEventListener("click",function(){nextQ();});
+document.getElementById("celb").addEventListener("click",function(){restart();});
+
+init();
+</script>
+</body>
+</html>
