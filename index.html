@@ -13,7 +13,6 @@ body {
   overflow-x: hidden;
 }
 
-/* 彩色泡泡背景裝飾 */
 body::before {
   content: "";
   position: fixed;
@@ -45,6 +44,7 @@ body::before {
   text-shadow: 2px 2px 0 rgba(0,0,0,0.15);
   letter-spacing: 1px;
 }
+.hdr-right { display: flex; align-items: center; gap: 10px; }
 .sbox {
   background: white;
   border-radius: 20px;
@@ -54,6 +54,20 @@ body::before {
   color: #FF8C42;
   box-shadow: 0 3px 8px rgba(0,0,0,0.1);
 }
+.snd-btn {
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px; height: 36px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s;
+  font-family: inherit;
+}
+.snd-btn:active { transform: scale(0.9); }
+.snd-btn.muted { opacity: 0.5; }
 
 /* TABS */
 .tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; justify-content: center; }
@@ -138,7 +152,7 @@ body::before {
 /* TWO-ZONE LAYOUT */
 .zones { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
 
-/* BEAD BANK - source */
+/* BEAD BANK */
 .bank {
   background: #FFF8F0;
   border: 3px dashed #FFB347;
@@ -152,6 +166,7 @@ body::before {
   border-color: #FF8C42;
   border-style: solid;
 }
+.bank-title {
   text-align: center;
   font-size: 0.82rem;
   color: #FF8C42;
@@ -171,7 +186,7 @@ body::before {
   color: #888;
 }
 
-/* PLACE VALUE COLUMNS - target */
+/* PLACE VALUE COLUMNS */
 .pcols { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; flex: 2; }
 .pcol {
   background: #FFFDE7;
@@ -238,20 +253,13 @@ body::before {
 .bead:active { cursor: grabbing; }
 .bead.dragging { opacity: 0.4; }
 
-/* bead structures */
 .bbar { display: flex; flex-direction: column; gap: 2px; align-items: center; cursor: grab; }
 .bsq  { display: grid; grid-template-columns: repeat(10, 22px); gap: 2px; cursor: grab; }
 .bcube { display: flex; flex-direction: column; gap: 1px; cursor: grab; }
 .bcube .bead { width: 9px; height: 9px; }
 .bcube .bsq  { grid-template-columns: repeat(10, 9px); gap: 1px; }
 
-/* draggable group */
-.drag-group {
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
+.drag-group { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 .drag-ghost {
   position: fixed;
   pointer-events: none;
@@ -261,7 +269,6 @@ body::before {
   transition: none;
 }
 
-/* bank source items */
 .src-bead, .src-bar, .src-sq, .src-cube {
   cursor: grab;
   touch-action: none;
@@ -316,11 +323,9 @@ body::before {
   box-shadow: 0 4px 0 rgba(0,0,0,0.1);
 }
 
-/* star burst animation */
 @keyframes pop { 0%{transform:scale(0.5);opacity:0} 60%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }
 .popped { animation: pop 0.3s ease-out; }
 
-/* confetti */
 .conf { position: fixed; width: 10px; height: 10px; border-radius: 3px; pointer-events: none; z-index: 9998; animation: cfall 2.2s ease-in forwards; }
 @keyframes cfall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(105vh) rotate(720deg);opacity:0} }
 </style>
@@ -328,15 +333,18 @@ body::before {
 <body>
 <div class="wrap">
   <div class="hdr">
-    <div class="htitle">&#127995; 金色串珠遊戲</div>
-    <div class="sbox">&#11088; <span id="sc">0</span> 分</div>
+    <div class="htitle">🧡 金色串珠遊戲</div>
+    <div class="hdr-right">
+      <button class="snd-btn" id="sndBtn" title="開關音效">🔊</button>
+      <div class="sbox">⭐ <span id="sc">0</span> 分</div>
+    </div>
   </div>
 
   <div class="tabs" id="tabsDiv">
-    <div class="tab on" data-lv="1">&#127462; 個位 (1-9)</div>
-    <div class="tab" data-lv="2">&#127463; 十位 (10-99)</div>
-    <div class="tab" data-lv="3">&#127464; 百位 (100-999)</div>
-    <div class="tab" data-lv="4">&#127465; 千位 (1000+)</div>
+    <div class="tab on" data-lv="1">🅰 個位 (1-9)</div>
+    <div class="tab" data-lv="2">🅱 十位 (10-99)</div>
+    <div class="tab" data-lv="3">🅲 百位 (100-999)</div>
+    <div class="tab" data-lv="4">🅳 千位 (1000+)</div>
   </div>
 
   <div class="pgarea">
@@ -345,7 +353,7 @@ body::before {
   </div>
 
   <div class="qcard">
-    <div class="qlbl">&#128072; 請把珠子拖到下面的格子裡，擺出這個數字！</div>
+    <div class="qlbl">👈 請把珠子拖到下面的格子裡，擺出這個數字！</div>
     <div class="qnum" id="qnum">-</div>
     <div class="drow" id="drow"></div>
   </div>
@@ -353,31 +361,172 @@ body::before {
   <div class="fb" id="fb"></div>
 
   <div class="ws">
-    <div class="wst">&#128588; 把左邊的珠子拖到右邊對應的位置！</div>
+    <div class="wst">🙌 把左邊的珠子拖到右邊對應的位置！</div>
     <div class="zones">
-      <!-- BEAD BANK -->
       <div class="bank" id="bankZone">
-        <div class="bank-title">&#128230; 珠子庫（拖回這裡放回）</div>
+        <div class="bank-title">📦 珠子庫（拖回這裡放回）</div>
         <div class="bank-items" id="bankItems"></div>
       </div>
-      <!-- PLACE VALUE COLUMNS -->
       <div class="pcols" id="pcols"></div>
     </div>
     <div class="arow">
-      <button class="abtn arst" id="btnRst">&#128260; 清除</button>
-      <button class="abtn achk" id="btnChk">&#10003; 檢查答案</button>
-      <button class="abtn anxt" id="btnNxt" style="display:none">下一題 &#10148;</button>
+      <button class="abtn arst" id="btnRst">🔄 清除</button>
+      <button class="abtn achk" id="btnChk">✓ 檢查答案</button>
+      <button class="abtn anxt" id="btnNxt" style="display:none">下一題 ❯</button>
     </div>
   </div>
 
   <div class="cel" id="cel">
-    <div class="celt">&#127881; 太棒了！</div>
+    <div class="celt">🎉 太棒了！</div>
     <div class="cels" id="cels"></div>
-    <button class="celb" id="celb">再玩一次 &#128257;</button>
+    <button class="celb" id="celb">再玩一次 🔁</button>
   </div>
 </div>
 
 <script>
+/* ══════════════════════════════════════
+   🔊 SOUND ENGINE (Web Audio API)
+   ══════════════════════════════════════ */
+var AudioCtx = window.AudioContext || window.webkitAudioContext;
+var actx = null;
+var soundOn = true;
+
+function getCtx() {
+  if (!actx) actx = new AudioCtx();
+  if (actx.state === "suspended") actx.resume();
+  return actx;
+}
+
+/* 拖放珠子時的「叮」聲 */
+function sndDrop() {
+  if (!soundOn) return;
+  try {
+    var ctx = getCtx();
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = "sine";
+    o.frequency.setValueAtTime(880, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.12);
+    g.gain.setValueAtTime(0.25, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime + 0.18);
+  } catch(e) {}
+}
+
+/* 移除珠子時的「噗」聲 */
+function sndRemove() {
+  if (!soundOn) return;
+  try {
+    var ctx = getCtx();
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = "sine";
+    o.frequency.setValueAtTime(440, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.1);
+    g.gain.setValueAtTime(0.2, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime + 0.12);
+  } catch(e) {}
+}
+
+/* 答對：上升的歡樂音階 */
+function sndCorrect() {
+  if (!soundOn) return;
+  try {
+    var ctx = getCtx();
+    var notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+    notes.forEach(function(freq, i) {
+      var o = ctx.createOscillator();
+      var g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = "triangle";
+      var t = ctx.currentTime + i * 0.13;
+      o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.3, t + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      o.start(t);
+      o.stop(t + 0.3);
+    });
+  } catch(e) {}
+}
+
+/* 答錯：下滑的短促音 */
+function sndWrong() {
+  if (!soundOn) return;
+  try {
+    var ctx = getCtx();
+    var notes = [392, 311]; // G4 → Eb4
+    notes.forEach(function(freq, i) {
+      var o = ctx.createOscillator();
+      var g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = "sawtooth";
+      var t = ctx.currentTime + i * 0.15;
+      o.frequency.setValueAtTime(freq, t);
+      o.frequency.exponentialRampToValueAtTime(freq * 0.85, t + 0.2);
+      g.gain.setValueAtTime(0.18, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+      o.start(t);
+      o.stop(t + 0.22);
+    });
+    /* 加一個震動感的低頻噪音 */
+    var buf = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.15;
+    var src = ctx.createBufferSource();
+    var gn = ctx.createGain();
+    src.buffer = buf;
+    src.connect(gn); gn.connect(ctx.destination);
+    gn.gain.setValueAtTime(0.15, ctx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    src.start(ctx.currentTime);
+  } catch(e) {}
+}
+
+/* 全部完成：勝利小樂曲 */
+function sndVictory() {
+  if (!soundOn) return;
+  try {
+    var ctx = getCtx();
+    var melody = [
+      {f:523,t:0},    // C5
+      {f:659,t:0.15}, // E5
+      {f:784,t:0.30}, // G5
+      {f:659,t:0.45}, // E5
+      {f:1047,t:0.60},{f:1047,t:0.75},{f:1047,t:0.90} // C6 x3
+    ];
+    melody.forEach(function(n) {
+      var o = ctx.createOscillator();
+      var g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = "triangle";
+      var t = ctx.currentTime + n.t;
+      o.frequency.setValueAtTime(n.f, t);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.35, t + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      o.start(t);
+      o.stop(t + 0.25);
+    });
+  } catch(e) {}
+}
+
+/* 音效開關 */
+document.getElementById("sndBtn").addEventListener("click", function() {
+  soundOn = !soundOn;
+  this.textContent = soundOn ? "🔊" : "🔇";
+  this.classList.toggle("muted", !soundOn);
+  if (soundOn) { sndDrop(); } // 試音
+});
+
+/* ══════════════════════════════════════
+   GAME LOGIC
+   ══════════════════════════════════════ */
 var lv=1, qs=[], curQ=0, scVal=0, done=false;
 var beads={T:0,H:0,TE:0,U:0};
 
@@ -409,7 +558,6 @@ function makePuzz(){
   return all.slice(0,c.total);
 }
 
-/* ── Build a bead element ── */
 function mkBead(small){
   var b=document.createElement("div");
   b.className="bead";
@@ -439,8 +587,7 @@ function mkUnit(type){
   if(type==="cube") return mkCube();
 }
 
-/* ── Drag & Drop (mouse + touch) ── */
-// dragFrom: "bank" = 從珠子庫拖出, "col" = 從格子拖回庫
+/* ── Drag & Drop ── */
 var ghost=null, ghostK=null, ghostFrom=null, ghostOff={x:0,y:0};
 
 function startDrag(e, k, from){
@@ -459,15 +606,12 @@ function startDrag(e, k, from){
   document.addEventListener("mouseup",   onDragEnd);
   document.addEventListener("touchmove", onDragMove, {passive:false});
   document.addEventListener("touchend",  onDragEnd);
-  // 從格子拖出時，先扣掉一個
   if(ghostFrom==="col" && beads[k]>0){
     beads[k]--;
     renderCol(k);
   }
-  // 高亮可放置的欄位
   var col=document.getElementById("drop-"+k);
   if(col) col.classList.add("drag-over");
-  // 高亮珠子庫（可放回）
   var bank=document.getElementById("bankZone");
   if(bank) bank.classList.add("drag-over");
 }
@@ -490,7 +634,6 @@ function onDragEnd(e){
   var cx=touch.clientX, cy=touch.clientY;
   var placed=false;
 
-  // 1. 試著放進格子
   var col=document.getElementById("drop-"+ghostK);
   if(col){
     col.classList.remove("drag-over");
@@ -502,34 +645,30 @@ function onDragEnd(e){
         col.classList.add("popped");
         setTimeout(function(x){return function(){x.classList.remove("popped");};}(col),300);
         placed=true;
+        sndDrop(); // 🔊 放置珠子音效
       }
     }
   }
 
-  // 2. 試著放回珠子庫
   if(!placed){
     var bank=document.getElementById("bankZone");
     if(bank){
       bank.classList.remove("drag-over");
       var rb=bank.getBoundingClientRect();
       if(cx>=rb.left&&cx<=rb.right&&cy>=rb.top&&cy<=rb.bottom){
-        // 放回庫：什麼都不做，珠子從格子拖出時已扣除
         placed=true;
-        // 小動畫提示
         bank.classList.add("popped");
         setTimeout(function(){bank.classList.remove("popped");},300);
+        sndRemove(); // 🔊 放回音效
       }
     }
   }
 
-  // 3. 如果兩處都沒放成功，且是從格子拖出的，要放回格子
   if(!placed && ghostFrom==="col"){
     beads[ghostK]++;
     renderCol(ghostK);
   }
-  // 如果是從珠子庫拖出但沒放到格子，就算了（珠子回到庫）
 
-  // 清除 drag-over 樣式
   var bank2=document.getElementById("bankZone");
   if(bank2) bank2.classList.remove("drag-over");
 
@@ -541,13 +680,15 @@ function onDragEnd(e){
   document.removeEventListener("touchend", onDragEnd);
 }
 
-/* ── 點擊格子裡的珠子也可以移除 ── */
 function removeOne(k){
   if(done) return;
-  if(beads[k]>0){beads[k]--;renderCol(k);}
+  if(beads[k]>0){
+    beads[k]--;
+    renderCol(k);
+    sndRemove(); // 🔊 移除音效
+  }
 }
 
-/* ── Build Bank (draggable source items) ── */
 function buildBank(){
   var bank=document.getElementById("bankItems");
   bank.innerHTML="";
@@ -563,7 +704,6 @@ function buildBank(){
     vis.style.cursor="grab";
     vis.setAttribute("data-k",k);
     vis.appendChild(mkUnit(type));
-    // scale down cube for display
     if(type==="cube") vis.style.transform="scale(0.6)";
     var lbl=document.createElement("div");
     lbl.className="bank-label";
@@ -571,8 +711,6 @@ function buildBank(){
     item.appendChild(vis);
     item.appendChild(lbl);
     bank.appendChild(item);
-
-    // bind drag from bank
     (function(kk){
       vis.addEventListener("mousedown", function(e){startDrag(e,kk,"bank");});
       vis.addEventListener("touchstart",function(e){startDrag(e,kk,"bank");},{passive:false});
@@ -580,7 +718,6 @@ function buildBank(){
   }
 }
 
-/* ── Build Place-Value Columns ── */
 function buildCols(){
   var cols=LV[lv].cols, con=document.getElementById("pcols");
   con.innerHTML=""; beads={T:0,H:0,TE:0,U:0};
@@ -589,25 +726,19 @@ function buildCols(){
     var d=document.createElement("div");
     d.className="pcol "+info.cls;
     d.id="drop-"+k;
-
     var lb=document.createElement("div");lb.className="pclbl";lb.textContent=info.lbl;d.appendChild(lb);
     var dp=document.createElement("div");dp.className="pdisp";dp.id="dp-"+k;d.appendChild(dp);
     var ct=document.createElement("div");ct.className="pcnt";ct.id="ct-"+k;ct.textContent="0";d.appendChild(ct);
-
     var hint=document.createElement("div");hint.className="drop-hint";hint.textContent="拖到這裡";d.appendChild(hint);
-
-    // tap on column counter to remove one
     (function(kk){
       ct.addEventListener("click",function(){removeOne(kk);});
       ct.style.cursor="pointer";
       ct.title="點擊移除一個";
     })(k);
-
     con.appendChild(d);
   }
 }
 
-/* ── Render a column's placed beads ── */
 function renderCol(k){
   var v=beads[k];
   var ct=document.getElementById("ct-"+k);
@@ -621,7 +752,6 @@ function renderCol(k){
     g.style.cursor="grab";
     g.style.touchAction="none";
     g.title="拖回珠子庫或點擊移除";
-    // 拖回珠子庫
     (function(kk){
       g.addEventListener("mousedown",function(e){startDrag(e,kk,"col");});
       g.addEventListener("touchstart",function(e){startDrag(e,kk,"col");},{passive:false});
@@ -636,7 +766,6 @@ function resetB(){
   for(var i=0;i<cols.length;i++) renderCol(cols[i]);
 }
 
-/* ── Load question ── */
 function loadQ(){
   done=false;
   document.getElementById("btnNxt").style.display="none";
@@ -657,7 +786,6 @@ function loadQ(){
   document.getElementById("pglbl").textContent="題目 "+(curQ+1)+" / "+total;
 }
 
-/* ── Check ── */
 function checkAns(){
   if(done) return;
   var n=qs[curQ],p=dcp(n),cols=LV[lv].cols,ok=true;
@@ -666,12 +794,14 @@ function checkAns(){
   var fb=document.getElementById("fb");
   if(ok){
     scVal++;document.getElementById("sc").textContent=scVal;
-    fb.className="fb ok";fb.textContent="&#127881; 答對了！太厲害了！";
+    fb.className="fb ok";fb.textContent="🎉 答對了！太厲害了！";
+    sndCorrect(); // 🔊 答對音效
     sprayConf();
   } else {
     var pts=[];
     for(var i=0;i<cols.length;i++) pts.push(CN[cols[i]]+"="+p[cols[i]]);
-    fb.className="fb err";fb.textContent="&#128522; 再試試！正確答案："+pts.join("，");
+    fb.className="fb err";fb.textContent="😊 再試試！正確答案："+pts.join("，");
+    sndWrong(); // 🔊 答錯音效
   }
   document.getElementById("btnNxt").style.display="inline-block";
 }
@@ -682,8 +812,9 @@ function nextQ(){
   if(curQ>=total){
     document.getElementById("pgbar").style.width="100%";
     document.getElementById("pglbl").textContent="完成！"+scVal+"/"+total+" 答對";
-    document.getElementById("cels").textContent=(scVal===total)?"全部答對！你真的是小天才！&#127941;":"你答對了 "+scVal+" 題，很棒喔！繼續加油！&#128170;";
+    document.getElementById("cels").textContent=(scVal===total)?"全部答對！你真的是小天才！🏆":"你答對了 "+scVal+" 題，很棒喔！繼續加油！💪";
     document.getElementById("cel").className="cel show";
+    sndVictory(); // 🔊 完成勝利音效
     sprayConf();
   } else { loadQ(); }
 }
@@ -703,7 +834,6 @@ function setLv(l){
   restart();
 }
 
-/* confetti */
 function sprayConf(){
   var cols=["#FF8C42","#FFD166","#06D6A0","#118AB2","#EF476F","#FFB347"];
   for(var i=0;i<40;i++){
@@ -720,7 +850,6 @@ function sprayConf(){
   }
 }
 
-/* wire buttons */
 document.getElementById("tabsDiv").addEventListener("click",function(e){
   var t=e.target;
   while(t&&t!==this){if(t.getAttribute("data-lv")){setLv(parseInt(t.getAttribute("data-lv")));return;}t=t.parentNode;}
@@ -729,6 +858,10 @@ document.getElementById("btnRst").addEventListener("click",function(){resetB();}
 document.getElementById("btnChk").addEventListener("click",function(){checkAns();});
 document.getElementById("btnNxt").addEventListener("click",function(){nextQ();});
 document.getElementById("celb").addEventListener("click",function(){restart();});
+
+// 初始化 AudioContext（需要使用者互動才能啟動）
+document.body.addEventListener("click", function() { getCtx(); }, {once: true});
+document.body.addEventListener("touchstart", function() { getCtx(); }, {once: true});
 
 init();
 </script>
