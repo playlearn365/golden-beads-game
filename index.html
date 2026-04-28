@@ -728,22 +728,14 @@ function buildCols(){
     d.id="drop-"+k;
     var lb=document.createElement("div");lb.className="pclbl";lb.textContent=info.lbl;d.appendChild(lb);
     var dp=document.createElement("div");dp.className="pdisp";dp.id="dp-"+k;d.appendChild(dp);
-    var ct=document.createElement("div");ct.className="pcnt";ct.id="ct-"+k;ct.textContent="0";d.appendChild(ct);
     var hint=document.createElement("div");hint.className="drop-hint";hint.textContent="拖到這裡";d.appendChild(hint);
-    (function(kk){
-      ct.addEventListener("click",function(){removeOne(kk);});
-      ct.style.cursor="pointer";
-      ct.title="點擊移除一個";
-    })(k);
     con.appendChild(d);
   }
 }
 
 function renderCol(k){
   var v=beads[k];
-  var ct=document.getElementById("ct-"+k);
   var dp=document.getElementById("dp-"+k);
-  if(ct) ct.textContent=v;
   if(!dp) return;
   dp.innerHTML="";
   var type=CI[k].type;
