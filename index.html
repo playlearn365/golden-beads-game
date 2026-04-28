@@ -383,145 +383,141 @@ body::before {
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <script>
 /* ══════════════════════════════════════
-   🔊 SOUND ENGINE (Web Audio API)
+   🎵 SOUND ENGINE (Tone.js)
    ══════════════════════════════════════ */
-var AudioCtx = window.AudioContext || window.webkitAudioContext;
-var actx = null;
 var soundOn = true;
+var toneReady = false;
 
-function getCtx() {
-  if (!actx) actx = new AudioCtx();
-  if (actx.state === "suspended") actx.resume();
-  return actx;
+/* 木琴音色：MetalSynth 模擬敲擊感 */
+var marimba = null;
+/* 鋼琴音色：Synth with piano-like envelope */
+var piano = null;
+/* 低沉錯誤音：Membrane（鼓皮）*/
+var drumSynth = null;
+
+function initTone() {
+  if (toneReady) return;
+  try {
+    Tone.start();
+
+    /* 🪵 木琴音色 — 放置珠子用 */
+    marimba = new Tone.MetalSynth({
+      frequency: 400,
+      envelope: { attack: 0.001, decay: 0.3, release: 0.1 },
+      harmonicity: 5.1,
+      modulationIndex: 32,
+      resonance: 4000,
+      octaves: 1.5,
+      volume: -10
+    }).toDestination();
+
+    /* 🎹 鋼琴音色 — 旋律用（答對、勝利） */
+    piano = new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: "triangle8" },
+      envelope: { attack: 0.005, decay: 0.4, sustain: 0.1, release: 1.2 },
+      volume: -8
+    }).toDestination();
+
+    /* 🥁 鼓皮音 — 答錯用 */
+    drumSynth = new Tone.MembraneSynth({
+      pitchDecay: 0.12,
+      octaves: 4,
+      envelope: { attack: 0.001, decay: 0.35, sustain: 0, release: 0.1 },
+      volume: -6
+    }).toDestination();
+
+    /* 輕微殘響讓音色更豐富 */
+    var reverb = new Tone.Reverb({ decay: 1.2, wet: 0.25 }).toDestination();
+    piano.connect(reverb);
+
+    toneReady = true;
+  } catch(e) { console.warn("Tone.js init failed:", e); }
 }
 
-/* 拖放珠子時的「叮」聲 */
-function sndDrop() {
-  if (!soundOn) return;
+/* ──────────────────────────────
+   🟡 放置珠子：木琴叮咚單音
+   音高隨位置不同（個位高、千位低）
+────────────────────────────── */
+var dropNotes = { U:"C5", TE:"G4", H:"E4", T:"C4" };
+function sndDrop(k) {
+  if (!soundOn || !toneReady) return;
   try {
-    var ctx = getCtx();
-    var o = ctx.createOscillator();
-    var g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.type = "sine";
-    o.frequency.setValueAtTime(880, ctx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.12);
-    g.gain.setValueAtTime(0.25, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-    o.start(ctx.currentTime);
-    o.stop(ctx.currentTime + 0.18);
+    var note = dropNotes[k] || "C5";
+    marimba.frequency.value = Tone.Frequency(note).toFrequency();
+    marimba.triggerAttackRelease(note, "16n");
   } catch(e) {}
 }
 
-/* 移除珠子時的「噗」聲 */
+/* ──────────────────────────────
+   🔵 移除珠子：木琴低八度短音
+────────────────────────────── */
 function sndRemove() {
-  if (!soundOn) return;
+  if (!soundOn || !toneReady) return;
   try {
-    var ctx = getCtx();
-    var o = ctx.createOscillator();
-    var g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.type = "sine";
-    o.frequency.setValueAtTime(440, ctx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.1);
-    g.gain.setValueAtTime(0.2, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-    o.start(ctx.currentTime);
-    o.stop(ctx.currentTime + 0.12);
+    marimba.frequency.value = Tone.Frequency("G3").toFrequency();
+    marimba.triggerAttackRelease("G3", "32n");
   } catch(e) {}
 }
 
-/* 答對：上升的歡樂音階 */
+/* ──────────────────────────────
+   ✅ 答對：鋼琴歡樂上升和弦
+────────────────────────────── */
 function sndCorrect() {
-  if (!soundOn) return;
+  if (!soundOn || !toneReady) return;
   try {
-    var ctx = getCtx();
-    var notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
-    notes.forEach(function(freq, i) {
-      var o = ctx.createOscillator();
-      var g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.type = "triangle";
-      var t = ctx.currentTime + i * 0.13;
-      o.frequency.setValueAtTime(freq, t);
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.3, t + 0.04);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-      o.start(t);
-      o.stop(t + 0.3);
-    });
+    var now = Tone.now();
+    piano.triggerAttackRelease("C4", "8n", now);
+    piano.triggerAttackRelease("E4", "8n", now + 0.12);
+    piano.triggerAttackRelease("G4", "8n", now + 0.24);
+    piano.triggerAttackRelease(["C5","E5"], "4n", now + 0.36);
   } catch(e) {}
 }
 
-/* 答錯：下滑的短促音 */
+/* ──────────────────────────────
+   ❌ 答錯：鼓皮低沉 + 鋼琴下行
+────────────────────────────── */
 function sndWrong() {
-  if (!soundOn) return;
+  if (!soundOn || !toneReady) return;
   try {
-    var ctx = getCtx();
-    var notes = [392, 311]; // G4 → Eb4
-    notes.forEach(function(freq, i) {
-      var o = ctx.createOscillator();
-      var g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.type = "sawtooth";
-      var t = ctx.currentTime + i * 0.15;
-      o.frequency.setValueAtTime(freq, t);
-      o.frequency.exponentialRampToValueAtTime(freq * 0.85, t + 0.2);
-      g.gain.setValueAtTime(0.18, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
-      o.start(t);
-      o.stop(t + 0.22);
-    });
-    /* 加一個震動感的低頻噪音 */
-    var buf = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
-    var d = buf.getChannelData(0);
-    for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.15;
-    var src = ctx.createBufferSource();
-    var gn = ctx.createGain();
-    src.buffer = buf;
-    src.connect(gn); gn.connect(ctx.destination);
-    gn.gain.setValueAtTime(0.15, ctx.currentTime);
-    gn.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-    src.start(ctx.currentTime);
+    var now = Tone.now();
+    drumSynth.triggerAttackRelease("C2", "8n", now);
+    piano.triggerAttackRelease("G3", "8n", now + 0.05);
+    piano.triggerAttackRelease("Eb3", "8n", now + 0.22);
   } catch(e) {}
 }
 
-/* 全部完成：勝利小樂曲 */
+/* ──────────────────────────────
+   🏆 全部完成：鋼琴勝利小曲
+────────────────────────────── */
 function sndVictory() {
-  if (!soundOn) return;
+  if (!soundOn || !toneReady) return;
   try {
-    var ctx = getCtx();
+    var now = Tone.now();
     var melody = [
-      {f:523,t:0},    // C5
-      {f:659,t:0.15}, // E5
-      {f:784,t:0.30}, // G5
-      {f:659,t:0.45}, // E5
-      {f:1047,t:0.60},{f:1047,t:0.75},{f:1047,t:0.90} // C6 x3
+      { n:"C4",  t:0    },
+      { n:"E4",  t:0.15 },
+      { n:"G4",  t:0.30 },
+      { n:"C5",  t:0.45 },
+      { n:"E5",  t:0.60 },
+      { n:["C5","E5","G5"], t:0.80 },
+      { n:["C4","E4","G4","C5"], t:1.05 }
     ];
-    melody.forEach(function(n) {
-      var o = ctx.createOscillator();
-      var g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.type = "triangle";
-      var t = ctx.currentTime + n.t;
-      o.frequency.setValueAtTime(n.f, t);
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.35, t + 0.04);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-      o.start(t);
-      o.stop(t + 0.25);
+    melody.forEach(function(m) {
+      piano.triggerAttackRelease(m.n, "8n", now + m.t);
     });
   } catch(e) {}
 }
 
 /* 音效開關 */
 document.getElementById("sndBtn").addEventListener("click", function() {
+  initTone(); // 確保使用者互動後初始化
   soundOn = !soundOn;
   this.textContent = soundOn ? "🔊" : "🔇";
   this.classList.toggle("muted", !soundOn);
-  if (soundOn) { sndDrop(); } // 試音
+  if (soundOn) { sndDrop("U"); } // 試音
 });
 
 /* ══════════════════════════════════════
@@ -645,7 +641,7 @@ function onDragEnd(e){
         col.classList.add("popped");
         setTimeout(function(x){return function(){x.classList.remove("popped");};}(col),300);
         placed=true;
-        sndDrop(); // 🔊 放置珠子音效
+        sndDrop(ghostK); // 🔊 放置珠子音效（音高依位置）
       }
     }
   }
@@ -851,9 +847,9 @@ document.getElementById("btnChk").addEventListener("click",function(){checkAns()
 document.getElementById("btnNxt").addEventListener("click",function(){nextQ();});
 document.getElementById("celb").addEventListener("click",function(){restart();});
 
-// 初始化 AudioContext（需要使用者互動才能啟動）
-document.body.addEventListener("click", function() { getCtx(); }, {once: true});
-document.body.addEventListener("touchstart", function() { getCtx(); }, {once: true});
+// 首次使用者互動時初始化 Tone.js（瀏覽器政策要求）
+document.body.addEventListener("click",      function(){ initTone(); }, {once:true});
+document.body.addEventListener("touchstart", function(){ initTone(); }, {once:true});
 
 init();
 </script>
